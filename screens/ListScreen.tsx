@@ -67,8 +67,8 @@ export default function ListScreen({ navigation }: Props) {
     navigation.navigate('Detail', { 
       todo,
       updateTodo: (updatedTodo: Todo) => {
-        setTodos(
-          todos.map((t) => (t.id === updatedTodo.id ? updatedTodo : t))
+        setTodos((prevTodos) =>
+          prevTodos.map((t) => (t.id === updatedTodo.id ? updatedTodo : t))
         );
       },
     });

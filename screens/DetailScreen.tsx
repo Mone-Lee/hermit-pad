@@ -90,13 +90,6 @@ export default function DetailScreen({ route, navigation }: Props) {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.label}>创建信息</Text>
-          <View style={styles.infoContainer}>
-            <Text style={styles.infoText}>ID: {todo.id}</Text>
-          </View>
-        </View>
-
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.saveButton}
