@@ -7,16 +7,21 @@ import {
   TouchableOpacity,
   TextInput,
   Alert,
+  ListRenderItem,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList, Todo } from '../types';
 
-export default function ListScreen({ navigation }) {
-  const [todos, setTodos] = useState([
+type Props = NativeStackScreenProps<RootStackParamList, 'List'>;
+
+export default function ListScreen({ navigation }: Props) {
+  const [todos, setTodos] = useState<Todo[]>([
     { id: '1', title: '学习 React Native', completed: false, description: '学习 React Native 基础知识和组件' },
     { id: '2', title: '完成项目开发', completed: false, description: '使用 Expo 创建 Todo List 应用' },
     { id: '3', title: '代码审查', completed: true, description: '检查代码质量和最佳实践' },
   ]);
-  const [newTodoTitle, setNewTodoTitle] = useState('');
+  const [newTodoTitle, setNewTodoTitle] = useState<string>('');
 
   const addTodo = () => {
     if (newTodoTitle.trim() === '') {
@@ -24,7 +29,7 @@ export default function ListScreen({ navigation }) {
       return;
     }
 
-    const newTodo = {
+    const newTodo: Todo = {
       id: Date.now().toString(),
       title: newTodoTitle.trim(),
       completed: false,
@@ -35,7 +40,7 @@ export default function ListScreen({ navigation }) {
     setNewTodoTitle('');
   };
 
-  const toggleTodo = (id) => {
+  const toggleTodo = (id: string) => {
     setTodos(
       todos.map((todo) =>
         todo.id === id ? { ...todo, completed: !todo.completed } : todo
@@ -43,7 +48,7 @@ export default function ListScreen({ navigation }) {
     );
   };
 
-  const deleteTodo = (id) => {
+  const deleteTodo = (id: string) => {
     Alert.alert(
       '确认删除',
       '确定要删除这个待办事项吗？',
@@ -58,10 +63,10 @@ export default function ListScreen({ navigation }) {
     );
   };
 
-  const navigateToDetail = (todo) => {
+  const navigateToDetail = (todo: Todo) => {
     navigation.navigate('Detail', { 
       todo,
-      updateTodo: (updatedTodo) => {
+      updateTodo: (updatedTodo: Todo) => {
         setTodos(
           todos.map((t) => (t.id === updatedTodo.id ? updatedTodo : t))
         );
@@ -69,7 +74,7 @@ export default function ListScreen({ navigation }) {
     });
   };
 
-  const renderTodoItem = ({ item }) => (
+  const renderTodoItem: ListRenderItem<Todo> = ({ item }) => (
     <TouchableOpacity
       style={styles.todoItem}
       onPress={() => navigateToDetail(item)}

@@ -9,12 +9,16 @@ import {
   Alert,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../types';
 
-export default function DetailScreen({ route, navigation }) {
+type Props = NativeStackScreenProps<RootStackParamList, 'Detail'>;
+
+export default function DetailScreen({ route, navigation }: Props) {
   const { todo, updateTodo } = route.params;
-  const [title, setTitle] = useState(todo.title);
-  const [description, setDescription] = useState(todo.description || '');
-  const [completed, setCompleted] = useState(todo.completed);
+  const [title, setTitle] = useState<string>(todo.title);
+  const [description, setDescription] = useState<string>(todo.description || '');
+  const [completed, setCompleted] = useState<boolean>(todo.completed);
 
   const handleSave = () => {
     if (title.trim() === '') {

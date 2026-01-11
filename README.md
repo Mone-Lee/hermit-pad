@@ -14,6 +14,7 @@
 - React Native
 - Expo
 - React Navigation
+- TypeScript
 - Native Stack Navigator
 
 ## 安装和运行
@@ -56,11 +57,13 @@ npm run web
 
 ```
 hermit-pad/
-├── App.js                 # 主应用入口，配置导航
+├── App.tsx                # 主应用入口，配置导航
+├── types.ts               # TypeScript 类型定义
 ├── screens/
-│   ├── ListScreen.js      # 待办列表页面
-│   └── DetailScreen.js    # 待办详情页面
+│   ├── ListScreen.tsx     # 待办列表页面
+│   └── DetailScreen.tsx   # 待办详情页面
 ├── assets/                # 图片和资源文件
+├── tsconfig.json          # TypeScript 配置
 ├── package.json           # 项目依赖
 └── README.md             # 项目说明
 ```
