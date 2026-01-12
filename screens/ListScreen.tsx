@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -8,20 +8,58 @@ import {
   TextInput,
   Alert,
   ListRenderItem,
+  Modal,
+  Platform,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList, Todo } from '../types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Clipboard from 'expo-clipboard';
+import { Todo } from '../types';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'List'>;
+const STORAGE_KEY = '@hermit_pad_todos';
 
-export default function ListScreen({ navigation }: Props) {
-  const [todos, setTodos] = useState<Todo[]>([
-    { id: '1', title: '学习 React Native', completed: false, description: '学习 React Native 基础知识和组件' },
-    { id: '2', title: '完成项目开发', completed: false, description: '使用 Expo 创建 Todo List 应用' },
-    { id: '3', title: '代码审查', completed: true, description: '检查代码质量和最佳实践' },
-  ]);
+export default function ListScreen() {
+  const [todos, setTodos] = useState<Todo[]>([]);
   const [newTodoTitle, setNewTodoTitle] = useState<string>('');
+  const [showSettings, setShowSettings] = useState<boolean>(false);
+  const [showImportModal, setShowImportModal] = useState<boolean>(false);
+  const [importData, setImportData] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // 从本地存储加载数据
+  useEffect(() => {
+    loadTodos();
+  }, []);
+
+  // 当 todos 变化时保存到本地存储
+  useEffect(() => {
+    if (!isLoading) {
+      saveTodos(todos);
+    }
+  }, [todos, isLoading]);
+
+  const loadTodos = async () => {
+    try {
+      const storedTodos = await AsyncStorage.getItem(STORAGE_KEY);
+      if (storedTodos !== null) {
+        setTodos(JSON.parse(storedTodos));
+      }
+    } catch (error) {
+      console.error('加载数据失败:', error);
+      Alert.alert('错误', '加载数据失败');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const saveTodos = async (todosToSave: Todo[]) => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(todosToSave));
+    } catch (error) {
+      console.error('保存数据失败:', error);
+      Alert.alert('错误', '保存数据失败');
+    }
+  };
 
   const addTodo = () => {
     if (newTodoTitle.trim() === '') {
@@ -63,22 +101,98 @@ export default function ListScreen({ navigation }: Props) {
     );
   };
 
-  const navigateToDetail = (todo: Todo) => {
-    navigation.navigate('Detail', { 
-      todo,
-      updateTodo: (updatedTodo: Todo) => {
-        setTodos((prevTodos) =>
-          prevTodos.map((t) => (t.id === updatedTodo.id ? updatedTodo : t))
-        );
-      },
-    });
+  // 导出数据
+  const exportData = async () => {
+    try {
+      const dataStr = JSON.stringify(todos, null, 2);
+      
+      if (Platform.OS === 'web') {
+        // Web 平台使用下载
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'hermit-pad-todos.json';
+        a.click();
+        URL.revokeObjectURL(url);
+        Alert.alert('成功', '数据已导出');
+      } else {
+        // 移动端使用分享或复制到剪贴板
+        await Clipboard.setStringAsync(dataStr);
+        Alert.alert('成功', '数据已复制到剪贴板，可粘贴到其他应用保存');
+      }
+      setShowSettings(false);
+    } catch (error) {
+      console.error('导出失败:', error);
+      Alert.alert('错误', '导出数据失败');
+    }
+  };
+
+  // 导入数据
+  const handleImport = () => {
+    setShowSettings(false);
+    setShowImportModal(true);
+  };
+
+  const confirmImport = () => {
+    try {
+      const parsedData = JSON.parse(importData);
+      
+      if (!Array.isArray(parsedData)) {
+        Alert.alert('错误', '数据格式不正确，请确保是有效的 JSON 数组');
+        return;
+      }
+
+      // 验证数据结构
+      const isValid = parsedData.every(
+        (item: Todo) =>
+          typeof item.id === 'string' &&
+          typeof item.title === 'string' &&
+          typeof item.completed === 'boolean'
+      );
+
+      if (!isValid) {
+        Alert.alert('错误', '数据格式不正确，请检查数据结构');
+        return;
+      }
+
+      Alert.alert(
+        '确认导入',
+        '导入将覆盖当前所有数据，确定继续吗？',
+        [
+          { text: '取消', style: 'cancel' },
+          {
+            text: '确定',
+            onPress: () => {
+              setTodos(parsedData);
+              setImportData('');
+              setShowImportModal(false);
+              Alert.alert('成功', '数据导入成功');
+            },
+          },
+        ]
+      );
+    } catch (error) {
+      Alert.alert('错误', '请输入有效的 JSON 数据');
+    }
+  };
+
+  // 从剪贴板粘贴
+  const pasteFromClipboard = async () => {
+    try {
+      const text = await Clipboard.getStringAsync();
+      if (text) {
+        setImportData(text);
+      } else {
+        Alert.alert('提示', '剪贴板为空');
+      }
+    } catch (error) {
+      Alert.alert('错误', '无法访问剪贴板');
+    }
   };
 
   const renderTodoItem: ListRenderItem<Todo> = ({ item }) => (
-    <TouchableOpacity
-      style={styles.todoItem}
-      onPress={() => navigateToDetail(item)}
-    >
+    <View style={styles.todoItem}>
       <View style={styles.todoContent}>
         <TouchableOpacity
           style={[styles.checkbox, item.completed && styles.checkboxChecked]}
@@ -108,7 +222,7 @@ export default function ListScreen({ navigation }: Props) {
       >
         <Text style={styles.deleteButtonText}>删除</Text>
       </TouchableOpacity>
-    </TouchableOpacity>
+    </View>
   );
 
   const completedCount = todos.filter((todo) => todo.completed).length;
@@ -151,6 +265,93 @@ export default function ListScreen({ navigation }: Props) {
           </View>
         }
       />
+
+      {/* 设置按钮 */}
+      <TouchableOpacity
+        style={styles.settingsButton}
+        onPress={() => setShowSettings(true)}
+      >
+        <Text style={styles.settingsIcon}>⚙️</Text>
+      </TouchableOpacity>
+
+      {/* 设置菜单 Modal */}
+      <Modal
+        visible={showSettings}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowSettings(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowSettings(false)}
+        >
+          <View style={styles.settingsMenu}>
+            <Text style={styles.settingsTitle}>设置</Text>
+            <TouchableOpacity style={styles.settingsItem} onPress={handleImport}>
+              <Text style={styles.settingsItemIcon}>📥</Text>
+              <Text style={styles.settingsItemText}>导入数据</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.settingsItem} onPress={exportData}>
+              <Text style={styles.settingsItemIcon}>📤</Text>
+              <Text style={styles.settingsItemText}>导出数据</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.settingsItem, styles.settingsItemCancel]}
+              onPress={() => setShowSettings(false)}
+            >
+              <Text style={styles.settingsItemCancelText}>取消</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* 导入数据 Modal */}
+      <Modal
+        visible={showImportModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowImportModal(false)}
+      >
+        <View style={styles.importModalOverlay}>
+          <View style={styles.importModal}>
+            <Text style={styles.importTitle}>导入数据</Text>
+            <Text style={styles.importHint}>请粘贴 JSON 格式的待办数据：</Text>
+            <TextInput
+              style={styles.importInput}
+              multiline
+              placeholder='[{"id": "1", "title": "示例", "completed": false, "description": ""}]'
+              value={importData}
+              onChangeText={setImportData}
+            />
+            <View style={styles.importButtons}>
+              <TouchableOpacity
+                style={styles.pasteButton}
+                onPress={pasteFromClipboard}
+              >
+                <Text style={styles.pasteButtonText}>从剪贴板粘贴</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.importActions}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => {
+                  setImportData('');
+                  setShowImportModal(false);
+                }}
+              >
+                <Text style={styles.cancelButtonText}>取消</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.confirmButton}
+                onPress={confirmImport}
+              >
+                <Text style={styles.confirmButtonText}>确认导入</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -209,6 +410,7 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     padding: 15,
+    paddingBottom: 80,
   },
   todoItem: {
     backgroundColor: '#fff',
@@ -291,5 +493,151 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#bbb',
     marginTop: 8,
+  },
+  // 设置按钮样式
+  settingsButton: {
+    position: 'absolute',
+    right: 20,
+    bottom: 30,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#007AFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  settingsIcon: {
+    fontSize: 24,
+  },
+  // 设置菜单样式
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  settingsMenu: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 30,
+    paddingTop: 10,
+  },
+  settingsTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    color: '#333',
+  },
+  settingsItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  settingsItemIcon: {
+    fontSize: 20,
+    marginRight: 15,
+  },
+  settingsItemText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  settingsItemCancel: {
+    justifyContent: 'center',
+    marginTop: 10,
+    borderBottomWidth: 0,
+  },
+  settingsItemCancelText: {
+    fontSize: 16,
+    color: '#FF3B30',
+    textAlign: 'center',
+    width: '100%',
+  },
+  // 导入 Modal 样式
+  importModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  importModal: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    maxHeight: '80%',
+  },
+  importTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    marginBottom: 10,
+    color: '#333',
+  },
+  importHint: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 10,
+  },
+  importInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    minHeight: 150,
+    fontSize: 14,
+    textAlignVertical: 'top',
+    backgroundColor: '#f9f9f9',
+  },
+  importButtons: {
+    marginTop: 10,
+  },
+  pasteButton: {
+    backgroundColor: '#f0f0f0',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  pasteButtonText: {
+    color: '#007AFF',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  importActions: {
+    flexDirection: 'row',
+    marginTop: 15,
+    gap: 10,
+  },
+  cancelButton: {
+    flex: 1,
+    padding: 14,
+    borderRadius: 8,
+    backgroundColor: '#f0f0f0',
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    color: '#666',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  confirmButton: {
+    flex: 1,
+    padding: 14,
+    borderRadius: 8,
+    backgroundColor: '#007AFF',
+    alignItems: 'center',
+  },
+  confirmButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
