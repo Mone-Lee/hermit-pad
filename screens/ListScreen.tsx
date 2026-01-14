@@ -107,7 +107,6 @@ export default function ListScreen() {
       const dataStr = JSON.stringify(todos, null, 2);
       
       if (Platform.OS === 'web') {
-        // Web 平台使用下载
         const blob = new Blob([dataStr], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -117,7 +116,6 @@ export default function ListScreen() {
         URL.revokeObjectURL(url);
         Alert.alert('成功', '数据已导出');
       } else {
-        // 移动端使用分享或复制到剪贴板
         await Clipboard.setStringAsync(dataStr);
         Alert.alert('成功', '数据已复制到剪贴板，可粘贴到其他应用保存');
       }
@@ -143,9 +141,8 @@ export default function ListScreen() {
         return;
       }
 
-      // 验证数据结构
       const isValid = parsedData.every(
-        (item: Todo) =>
+        (item: any) =>
           typeof item.id === 'string' &&
           typeof item.title === 'string' &&
           typeof item.completed === 'boolean'
@@ -177,7 +174,6 @@ export default function ListScreen() {
     }
   };
 
-  // 从剪贴板粘贴
   const pasteFromClipboard = async () => {
     try {
       const text = await Clipboard.getStringAsync();
@@ -192,65 +188,35 @@ export default function ListScreen() {
   };
 
   const renderTodoItem: ListRenderItem<Todo> = ({ item }) => (
-    <View style={styles.todoItem}>
-      <View style={styles.todoContent}>
-        <TouchableOpacity
-          style={[styles.checkbox, item.completed && styles.checkboxChecked]}
-          onPress={() => toggleTodo(item.id)}
-        >
-          {item.completed && <Text style={styles.checkmark}>✓</Text>}
-        </TouchableOpacity>
-        <View style={styles.todoText}>
-          <Text
-            style={[
-              styles.todoTitle,
-              item.completed && styles.todoTitleCompleted,
-            ]}
-          >
-            {item.title}
-          </Text>
-          {item.description ? (
-            <Text style={styles.todoDescription} numberOfLines={1}>
-              {item.description}
-            </Text>
-          ) : null}
-        </View>
-      </View>
-      <TouchableOpacity
-        style={styles.deleteButton}
-        onPress={() => deleteTodo(item.id)}
+    <TouchableOpacity
+      style={styles.todoItem}
+      activeOpacity={0.7}
+    >
+      <Text
+        style={[
+          styles.todoTitle,
+          item.completed && styles.todoTitleCompleted,
+        ]}
       >
-        <Text style={styles.deleteButtonText}>删除</Text>
-      </TouchableOpacity>
-    </View>
+        {item.title}
+      </Text>
+    </TouchableOpacity>
   );
-
-  const completedCount = todos.filter((todo) => todo.completed).length;
-  const totalCount = todos.length;
 
   return (
     <View style={styles.container}>
-      <StatusBar style="auto" />
-      
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>我的待办事项</Text>
-        <Text style={styles.headerStats}>
-          已完成 {completedCount} / {totalCount}
-        </Text>
-      </View>
+      <StatusBar style="dark" />
 
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
           placeholder="添加新的待办事项..."
+          placeholderTextColor="#999"
           value={newTodoTitle}
           onChangeText={setNewTodoTitle}
           onSubmitEditing={addTodo}
           returnKeyType="done"
         />
-        <TouchableOpacity style={styles.addButton} onPress={addTodo}>
-          <Text style={styles.addButtonText}>添加</Text>
-        </TouchableOpacity>
       </View>
 
       <FlatList
@@ -261,17 +227,16 @@ export default function ListScreen() {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>暂无待办事项</Text>
-            <Text style={styles.emptySubtext}>添加一个新的待办事项开始吧！</Text>
           </View>
         }
       />
 
-      {/* 设置按钮 */}
+      {/* 礼物图标按钮 */}
       <TouchableOpacity
-        style={styles.settingsButton}
+        style={styles.giftButton}
         onPress={() => setShowSettings(true)}
       >
-        <Text style={styles.settingsIcon}>⚙️</Text>
+        <Text style={styles.giftIcon}>🎁</Text>
       </TouchableOpacity>
 
       {/* 设置菜单 Modal */}
@@ -359,160 +324,61 @@ export default function ListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    backgroundColor: '#007AFF',
-    padding: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 5,
-  },
-  headerStats: {
-    fontSize: 14,
-    color: '#fff',
-    opacity: 0.9,
+    backgroundColor: '#fff',
   },
   inputContainer: {
-    flexDirection: 'row',
-    padding: 15,
+    paddingHorizontal: 20,
+    paddingVertical: 15,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: '#f0f0f0',
   },
   input: {
-    flex: 1,
     height: 45,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingHorizontal: 15,
     fontSize: 16,
-    backgroundColor: '#f9f9f9',
-  },
-  addButton: {
-    marginLeft: 10,
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  addButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    color: '#000',
   },
   listContainer: {
-    padding: 15,
-    paddingBottom: 80,
+    paddingBottom: 100,
   },
   todoItem: {
+    paddingVertical: 18,
+    paddingHorizontal: 20,
     backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  todoContent: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#007AFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  checkboxChecked: {
-    backgroundColor: '#007AFF',
-  },
-  checkmark: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  todoText: {
-    flex: 1,
   },
   todoTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
+    fontSize: 18,
+    color: '#000',
+    lineHeight: 24,
   },
   todoTitleCompleted: {
     textDecorationLine: 'line-through',
     color: '#999',
   },
-  todoDescription: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
-  },
-  deleteButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-    backgroundColor: '#FF3B30',
-    marginLeft: 10,
-  },
-  deleteButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '500',
-  },
   emptyContainer: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 80,
+    paddingTop: 100,
   },
   emptyText: {
-    fontSize: 18,
-    color: '#999',
-    fontWeight: '600',
+    fontSize: 16,
+    color: '#ccc',
   },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#bbb',
-    marginTop: 8,
-  },
-  // 设置按钮样式
-  settingsButton: {
+  // 礼物按钮样式
+  giftButton: {
     position: 'absolute',
     right: 20,
     bottom: 30,
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 8,
+    elevation: 4,
   },
-  settingsIcon: {
-    fontSize: 24,
+  giftIcon: {
+    fontSize: 28,
   },
   // 设置菜单样式
   modalOverlay: {
