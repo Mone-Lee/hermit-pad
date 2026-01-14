@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Swipeable } from 'react-native-gesture-handler';
+import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Clipboard from 'expo-clipboard';
 import { Todo } from '../types';
@@ -216,7 +217,7 @@ export default function ListScreen() {
           style={styles.deleteAction}
           onPress={() => showDeleteConfirm(item.id)}
         >
-          <Text style={styles.deleteIcon}>🗑️</Text>
+          <MaterialIcons name="delete-outline" size={24} color="#f4665e" />
         </TouchableOpacity>
       </Animated.View>
     );
@@ -279,7 +280,7 @@ export default function ListScreen() {
         style={styles.giftButton}
         onPress={() => setShowSettings(true)}
       >
-        <Text style={styles.giftIcon}>🎁</Text>
+        <MaterialIcons name="settings" size={24} color="black" />
       </TouchableOpacity>
 
       {/* 设置菜单 Modal */}
@@ -371,7 +372,7 @@ export default function ListScreen() {
         <View style={styles.deleteModalOverlay}>
           <View style={styles.deleteModal}>
             <View style={styles.deleteIconContainer}>
-              <Text style={styles.deleteModalIcon}>🗑️</Text>
+              <MaterialIcons name="delete-outline" size={40} color="#FF3B30" />
             </View>
             <Text style={styles.deleteModalTitle}>确认删除事件</Text>
             <View style={styles.deleteModalActions}>
@@ -586,14 +587,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   deleteAction: {
-    backgroundColor: '#FF3B30',
     justifyContent: 'center',
     alignItems: 'center',
     width: 80,
     height: '100%',
-  },
-  deleteIcon: {
-    fontSize: 24,
   },
   // 删除确认弹窗样式
   deleteModalOverlay: {
@@ -619,9 +616,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
-  },
-  deleteModalIcon: {
-    fontSize: 36,
   },
   deleteModalTitle: {
     fontSize: 18,
