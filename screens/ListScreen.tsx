@@ -10,8 +10,10 @@ import {
   ListRenderItem,
   Modal,
   Platform,
+  Animated,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { Swipeable } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Clipboard from 'expo-clipboard';
 import { Todo } from '../types';
@@ -25,6 +27,8 @@ export default function ListScreen() {
   const [showImportModal, setShowImportModal] = useState<boolean>(false);
   const [importData, setImportData] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [deleteConfirmVisible, setDeleteConfirmVisible] = useState<boolean>(false);
+  const [todoToDelete, setTodoToDelete] = useState<string | null>(null);
 
   // 从本地存储加载数据
   useEffect(() => {
@@ -86,19 +90,22 @@ export default function ListScreen() {
     );
   };
 
-  const deleteTodo = (id: string) => {
-    Alert.alert(
-      '确认删除',
-      '确定要删除这个待办事项吗？',
-      [
-        { text: '取消', style: 'cancel' },
-        {
-          text: '删除',
-          style: 'destructive',
-          onPress: () => setTodos(todos.filter((todo) => todo.id !== id)),
-        },
-      ]
-    );
+  const showDeleteConfirm = (id: string) => {
+    setTodoToDelete(id);
+    setDeleteConfirmVisible(true);
+  };
+
+  const confirmDelete = () => {
+    if (todoToDelete) {
+      setTodos(todos.filter((todo) => todo.id !== todoToDelete));
+    }
+    setDeleteConfirmVisible(false);
+    setTodoToDelete(null);
+  };
+
+  const cancelDelete = () => {
+    setDeleteConfirmVisible(false);
+    setTodoToDelete(null);
   };
 
   // 导出数据
@@ -187,20 +194,56 @@ export default function ListScreen() {
     }
   };
 
-  const renderTodoItem: ListRenderItem<Todo> = ({ item }) => (
-    <TouchableOpacity
-      style={styles.todoItem}
-      activeOpacity={0.7}
-    >
-      <Text
+  const renderRightActions = (
+    progress: Animated.AnimatedInterpolation<number>,
+    dragX: Animated.AnimatedInterpolation<number>,
+    item: Todo
+  ) => {
+    const trans = dragX.interpolate({
+      inputRange: [-80, 0],
+      outputRange: [0, 80],
+      extrapolate: 'clamp',
+    });
+
+    return (
+      <Animated.View
         style={[
-          styles.todoTitle,
-          item.completed && styles.todoTitleCompleted,
+          styles.swipeActionContainer,
+          { transform: [{ translateX: trans }] },
         ]}
       >
-        {item.title}
-      </Text>
-    </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.deleteAction}
+          onPress={() => showDeleteConfirm(item.id)}
+        >
+          <Text style={styles.deleteIcon}>🗑️</Text>
+        </TouchableOpacity>
+      </Animated.View>
+    );
+  };
+
+  const renderTodoItem: ListRenderItem<Todo> = ({ item }) => (
+    <Swipeable
+      renderRightActions={(progress, dragX) =>
+        renderRightActions(progress, dragX, item)
+      }
+      overshootRight={false}
+      rightThreshold={40}
+    >
+      <TouchableOpacity
+        style={styles.todoItem}
+        activeOpacity={0.7}
+      >
+        <Text
+          style={[
+            styles.todoTitle,
+            item.completed && styles.todoTitleCompleted,
+          ]}
+        >
+          {item.title}
+        </Text>
+      </TouchableOpacity>
+    </Swipeable>
   );
 
   return (
@@ -312,6 +355,37 @@ export default function ListScreen() {
                 onPress={confirmImport}
               >
                 <Text style={styles.confirmButtonText}>确认导入</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* 删除确认弹窗 */}
+      <Modal
+        visible={deleteConfirmVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={cancelDelete}
+      >
+        <View style={styles.deleteModalOverlay}>
+          <View style={styles.deleteModal}>
+            <View style={styles.deleteIconContainer}>
+              <Text style={styles.deleteModalIcon}>🗑️</Text>
+            </View>
+            <Text style={styles.deleteModalTitle}>确认删除事件</Text>
+            <View style={styles.deleteModalActions}>
+              <TouchableOpacity
+                style={styles.deleteModalCancelButton}
+                onPress={cancelDelete}
+              >
+                <Text style={styles.deleteModalCancelText}>取消</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.deleteModalConfirmButton}
+                onPress={confirmDelete}
+              >
+                <Text style={styles.deleteModalConfirmText}>确认</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -505,5 +579,83 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  // 滑动操作样式
+  swipeActionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  deleteAction: {
+    backgroundColor: '#FF3B30',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    height: '100%',
+  },
+  deleteIcon: {
+    fontSize: 24,
+  },
+  // 删除确认弹窗样式
+  deleteModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  deleteModal: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 30,
+    width: '85%',
+    maxWidth: 400,
+    alignItems: 'center',
+  },
+  deleteIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#FFE5E5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  deleteModalIcon: {
+    fontSize: 36,
+  },
+  deleteModalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#000',
+    marginBottom: 30,
+  },
+  deleteModalActions: {
+    flexDirection: 'row',
+    width: '100%',
+    gap: 12,
+  },
+  deleteModalCancelButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: '#F0F0F0',
+    alignItems: 'center',
+  },
+  deleteModalCancelText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#666',
+  },
+  deleteModalConfirmButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: '#000',
+    alignItems: 'center',
+  },
+  deleteModalConfirmText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
   },
 });
