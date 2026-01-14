@@ -223,13 +223,50 @@ export default function ListScreen() {
     );
   };
 
+  const renderLeftActions = (
+    progress: Animated.AnimatedInterpolation<number>,
+    dragX: Animated.AnimatedInterpolation<number>,
+    item: Todo
+  ) => {
+    const trans = dragX.interpolate({
+      inputRange: [0, 80],
+      outputRange: [-80, 0],
+      extrapolate: 'clamp',
+    });
+
+    return (
+      <Animated.View
+        style={[
+          styles.swipeActionContainer,
+          { transform: [{ translateX: trans }] },
+        ]}
+      >
+        <TouchableOpacity
+          style={styles.completeAction}
+          onPress={() => toggleTodo(item.id)}
+        >
+          <MaterialIcons 
+            name={item.completed ? "remove-done" : "done-all"} 
+            size={24} 
+            color={item.completed ? "#999" : "#4CAF50"}
+          />
+        </TouchableOpacity>
+      </Animated.View>
+    );
+  };
+
   const renderTodoItem: ListRenderItem<Todo> = ({ item }) => (
     <Swipeable
       renderRightActions={(progress, dragX) =>
         renderRightActions(progress, dragX, item)
       }
+      renderLeftActions={(progress, dragX) =>
+        renderLeftActions(progress, dragX, item)
+      }
       overshootRight={false}
+      overshootLeft={false}
       rightThreshold={40}
+      leftThreshold={40}
     >
       <TouchableOpacity
         style={styles.todoItem}
@@ -587,6 +624,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   deleteAction: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    height: '100%',
+  },
+  completeAction: {
     justifyContent: 'center',
     alignItems: 'center',
     width: 80,
