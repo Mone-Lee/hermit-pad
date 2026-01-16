@@ -625,17 +625,6 @@ export default function ListScreen() {
                 multiline
               />
               
-              <View style={styles.detailDescriptionContainer}>
-                <MaterialIcons name="description" size={20} color="#ccc" style={styles.descriptionIcon} />
-                <TextInput
-                  style={styles.detailDescriptionInput}
-                  placeholder="描述"
-                  placeholderTextColor="#ccc"
-                  editable={false}
-                  multiline
-                />
-              </View>
-              
               <View style={styles.subtasksSection}>
                 {selectedTodo?.subtasks && selectedTodo.subtasks.length > 0 && (
                   <DraggableFlatList
@@ -652,7 +641,7 @@ export default function ListScreen() {
                             <MaterialIcons 
                               name={item.completed ? "check-box" : "check-box-outline-blank"} 
                               size={24} 
-                              color={item.completed ? "#34C759" : "#ccc"} 
+                              color={item.completed ? "#eee" : "#ccc"} 
                             />
                           </TouchableOpacity>
                           
@@ -718,14 +707,6 @@ export default function ListScreen() {
               <TouchableOpacity style={styles.detailActionButton} onPress={deleteTodoFromDetail}>
                 <MaterialIcons name="delete-outline" size={26} color="#666" />
                 <Text style={styles.detailActionText}>删除</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.detailActionButton}>
-                <MaterialIcons name="edit" size={26} color="#666" />
-                <Text style={styles.detailActionText}>编辑</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.detailActionButton}>
-                <MaterialIcons name="timer" size={26} color="#666" />
-                <Text style={styles.detailActionText}>计时</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.detailActionButton} onPress={toggleTodoFromDetail}>
                 <MaterialIcons 
@@ -1095,20 +1076,6 @@ const styles = StyleSheet.create({
     color: '#000',
     paddingVertical: 8,
     marginBottom: 8,
-  },
-  detailDescriptionContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    marginBottom: 12,
-  },
-  descriptionIcon: {
-    marginRight: 8,
-  },
-  detailDescriptionInput: {
-    flex: 1,
-    fontSize: 15,
-    color: '#ccc',
   },
   subtasksSection: {
     marginTop: 8,
