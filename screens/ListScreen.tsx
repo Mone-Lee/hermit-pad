@@ -10,6 +10,7 @@ import {
   Platform,
   Animated,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Swipeable } from 'react-native-gesture-handler';
 import DraggableFlatList, {
@@ -304,7 +305,7 @@ export default function ListScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
 
       <View style={styles.inputContainer}>
@@ -449,7 +450,7 @@ export default function ListScreen() {
           </View>
         </View>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 }
 
