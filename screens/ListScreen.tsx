@@ -3,17 +3,19 @@ import {
   StyleSheet,
   Text,
   View,
-  FlatList,
   TouchableOpacity,
   TextInput,
   Alert,
-  ListRenderItem,
   Modal,
   Platform,
   Animated,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Swipeable } from 'react-native-gesture-handler';
+import DraggableFlatList, {
+  ScaleDecorator,
+  RenderItemParams,
+} from 'react-native-draggable-flatlist';
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Clipboard from 'expo-clipboard';
@@ -255,34 +257,51 @@ export default function ListScreen() {
     );
   };
 
-  const renderTodoItem: ListRenderItem<Todo> = ({ item }) => (
-    <Swipeable
-      renderRightActions={(progress, dragX) =>
-        renderRightActions(progress, dragX, item)
-      }
-      renderLeftActions={(progress, dragX) =>
-        renderLeftActions(progress, dragX, item)
-      }
-      overshootRight={false}
-      overshootLeft={false}
-      rightThreshold={40}
-      leftThreshold={40}
-    >
-      <TouchableOpacity
-        style={styles.todoItem}
-        activeOpacity={0.7}
-      >
-        <Text
-          style={[
-            styles.todoTitle,
-            item.completed && styles.todoTitleCompleted,
-          ]}
+  const renderTodoItem = ({ item, drag, isActive }: RenderItemParams<Todo>) => {
+    const itemIndex = todos.findIndex(t => t.id === item.id);
+    const isFirst = itemIndex === 0;
+    const isLast = itemIndex === todos.length - 1;
+
+    return (
+      <ScaleDecorator>
+        <Swipeable
+          renderRightActions={(progress, dragX) =>
+            renderRightActions(progress, dragX, item)
+          }
+          renderLeftActions={(progress, dragX) =>
+            renderLeftActions(progress, dragX, item)
+          }
+          overshootRight={false}
+          overshootLeft={false}
+          rightThreshold={40}
+          leftThreshold={40}
         >
-          {item.title}
-        </Text>
-      </TouchableOpacity>
-    </Swipeable>
-  );
+          <View
+            style={[
+              styles.todoItem,
+              isActive && styles.todoItemActive,
+            ]}
+          >
+            <TouchableOpacity
+              style={styles.todoTextContainer}
+              activeOpacity={0.7}
+              onLongPress={Platform.OS !== 'web' ? drag : undefined}
+              disabled={isActive}
+            >
+              <Text
+                style={[
+                  styles.todoTitle,
+                  item.completed && styles.todoTitleCompleted,
+                ]}
+              >
+                {item.title}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </Swipeable>
+      </ScaleDecorator>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -300,10 +319,11 @@ export default function ListScreen() {
         />
       </View>
 
-      <FlatList
+      <DraggableFlatList
         data={todos}
         renderItem={renderTodoItem}
         keyExtractor={(item) => item.id}
+        onDragEnd={({ data }) => setTodos(data)}
         contentContainerStyle={styles.listContainer}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
@@ -458,6 +478,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     backgroundColor: '#fff',
   },
+  todoItemActive: {
+    backgroundColor: '#f5f5f5',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  todoContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  todoTextContainer: {
+    flex: 1,
+  },
   todoTitle: {
     fontSize: 18,
     color: '#000',
@@ -466,6 +502,17 @@ const styles = StyleSheet.create({
   todoTitleCompleted: {
     textDecorationLine: 'line-through',
     color: '#999',
+  },
+  webDragControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  dragButton: {
+    padding: 4,
+  },
+  dragButtonDisabled: {
+    opacity: 0.3,
   },
   emptyContainer: {
     alignItems: 'center',
