@@ -9,6 +9,7 @@ import {
   Modal,
   Platform,
   Animated,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -33,6 +34,12 @@ export default function ListScreen() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState<boolean>(false);
   const [todoToDelete, setTodoToDelete] = useState<string | null>(null);
+  const [detailModalVisible, setDetailModalVisible] = useState<boolean>(false);
+  const [selectedTodo, setSelectedTodo] = useState<Todo | null>(null);
+  const [editingTitle, setEditingTitle] = useState<string>('');
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState<string>('');
+  const [editingSubtaskId, setEditingSubtaskId] = useState<string | null>(null);
+  const [editingSubtaskText, setEditingSubtaskText] = useState<string>('');
 
   // 从本地存储加载数据
   useEffect(() => {
@@ -79,7 +86,7 @@ export default function ListScreen() {
       id: Date.now().toString(),
       title: newTodoTitle.trim(),
       completed: false,
-      description: '',
+      subtasks: [],
     };
 
     setTodos([newTodo, ...todos]);
@@ -110,6 +117,168 @@ export default function ListScreen() {
   const cancelDelete = () => {
     setDeleteConfirmVisible(false);
     setTodoToDelete(null);
+  };
+
+  // 打开详情弹窗
+  const openDetailModal = (todo: Todo) => {
+    setSelectedTodo(todo);
+    setEditingTitle(todo.title);
+    setNewSubtaskTitle('');
+    setDetailModalVisible(true);
+  };
+
+  // 关闭详情弹窗
+  const closeDetailModal = () => {
+    setDetailModalVisible(false);
+    setSelectedTodo(null);
+    setEditingTitle('');
+    setNewSubtaskTitle('');
+    setEditingSubtaskId(null);
+    setEditingSubtaskText('');
+  };
+
+  // 更新 todo 标题
+  const updateTodoTitle = () => {
+    if (selectedTodo && editingTitle.trim() !== '') {
+      setTodos(todos.map(todo =>
+        todo.id === selectedTodo.id
+          ? { ...todo, title: editingTitle.trim() }
+          : todo
+      ));
+      if (selectedTodo) {
+        setSelectedTodo({ ...selectedTodo, title: editingTitle.trim() });
+      }
+    }
+  };
+
+  // 添加子任务
+  const addSubtask = () => {
+    if (selectedTodo && newSubtaskTitle.trim() !== '') {
+      const newSubtask: Todo = {
+        id: `${selectedTodo.id}-${Date.now()}`,
+        title: newSubtaskTitle.trim(),
+        completed: false,
+        subtasks: [],
+      };
+      
+      const updatedTodos = todos.map(todo =>
+        todo.id === selectedTodo.id
+          ? { ...todo, subtasks: [...(todo.subtasks || []), newSubtask] }
+          : todo
+      );
+      
+      setTodos(updatedTodos);
+      const updatedSelectedTodo = updatedTodos.find(t => t.id === selectedTodo.id);
+      if (updatedSelectedTodo) {
+        setSelectedTodo(updatedSelectedTodo);
+      }
+      setNewSubtaskTitle('');
+    }
+  };
+
+  // 切换子任务完成状态
+  const toggleSubtask = (subtaskId: string) => {
+    if (selectedTodo) {
+      const updatedTodos = todos.map(todo =>
+        todo.id === selectedTodo.id
+          ? {
+              ...todo,
+              subtasks: (todo.subtasks || []).map(st =>
+                st.id === subtaskId ? { ...st, completed: !st.completed } : st
+              ),
+            }
+          : todo
+      );
+      
+      setTodos(updatedTodos);
+      const updatedSelectedTodo = updatedTodos.find(t => t.id === selectedTodo.id);
+      if (updatedSelectedTodo) {
+        setSelectedTodo(updatedSelectedTodo);
+      }
+    }
+  };
+
+  // 删除子任务
+  const deleteSubtask = (subtaskId: string) => {
+    if (selectedTodo) {
+      const updatedTodos = todos.map(todo =>
+        todo.id === selectedTodo.id
+          ? {
+              ...todo,
+              subtasks: (todo.subtasks || []).filter(st => st.id !== subtaskId),
+            }
+          : todo
+      );
+      
+      setTodos(updatedTodos);
+      const updatedSelectedTodo = updatedTodos.find(t => t.id === selectedTodo.id);
+      if (updatedSelectedTodo) {
+        setSelectedTodo(updatedSelectedTodo);
+      }
+    }
+  };
+
+  // 从详情弹窗切换完成状态
+  const toggleTodoFromDetail = () => {
+    if (selectedTodo) {
+      toggleTodo(selectedTodo.id);
+      setSelectedTodo({ ...selectedTodo, completed: !selectedTodo.completed });
+    }
+  };
+
+  // 从详情弹窗删除 todo
+  const deleteTodoFromDetail = () => {
+    if (selectedTodo) {
+      showDeleteConfirm(selectedTodo.id);
+      closeDetailModal();
+    }
+  };
+
+  // 开始编辑子任务
+  const startEditingSubtask = (subtask: Todo) => {
+    setEditingSubtaskId(subtask.id);
+    setEditingSubtaskText(subtask.title);
+  };
+
+  // 完成编辑子任务
+  const finishEditingSubtask = () => {
+    if (selectedTodo && editingSubtaskId && editingSubtaskText.trim() !== '') {
+      const updatedTodos = todos.map(todo =>
+        todo.id === selectedTodo.id
+          ? {
+              ...todo,
+              subtasks: (todo.subtasks || []).map(st =>
+                st.id === editingSubtaskId ? { ...st, title: editingSubtaskText.trim() } : st
+              ),
+            }
+          : todo
+      );
+      
+      setTodos(updatedTodos);
+      const updatedSelectedTodo = updatedTodos.find(t => t.id === selectedTodo.id);
+      if (updatedSelectedTodo) {
+        setSelectedTodo(updatedSelectedTodo);
+      }
+    }
+    setEditingSubtaskId(null);
+    setEditingSubtaskText('');
+  };
+
+  // 更新子任务顺序
+  const updateSubtaskOrder = (newSubtasks: Todo[]) => {
+    if (selectedTodo) {
+      const updatedTodos = todos.map(todo =>
+        todo.id === selectedTodo.id
+          ? { ...todo, subtasks: newSubtasks }
+          : todo
+      );
+      
+      setTodos(updatedTodos);
+      const updatedSelectedTodo = updatedTodos.find(t => t.id === selectedTodo.id);
+      if (updatedSelectedTodo) {
+        setSelectedTodo(updatedSelectedTodo);
+      }
+    }
   };
 
   // 导出数据
@@ -286,6 +455,7 @@ export default function ListScreen() {
             <TouchableOpacity
               style={styles.todoTextContainer}
               activeOpacity={0.7}
+              onPress={() => openDetailModal(item)}
               onLongPress={Platform.OS !== 'web' ? drag : undefined}
               disabled={isActive}
             >
@@ -297,6 +467,11 @@ export default function ListScreen() {
               >
                 {item.title}
               </Text>
+              {item.subtasks && item.subtasks.length > 0 && (
+                <Text style={styles.subtaskCount}>
+                  {item.subtasks.filter(st => st.completed).length}/{item.subtasks.length}
+                </Text>
+              )}
             </TouchableOpacity>
           </View>
         </Swipeable>
@@ -418,6 +593,151 @@ export default function ListScreen() {
             </View>
           </View>
         </View>
+      </Modal>
+
+      {/* 详情弹窗 */}
+      <Modal
+        visible={detailModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={closeDetailModal}
+      >
+        <TouchableOpacity 
+          style={styles.detailModalOverlay} 
+          activeOpacity={1} 
+          onPress={closeDetailModal}
+        >
+          <TouchableOpacity 
+            style={styles.detailModal} 
+            activeOpacity={1}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View style={styles.detailModalHandle} />
+            
+            <ScrollView style={styles.detailContent} showsVerticalScrollIndicator={false}>
+              <TextInput
+                style={styles.detailTitleInput}
+                value={editingTitle}
+                onChangeText={setEditingTitle}
+                onBlur={updateTodoTitle}
+                placeholder="标题"
+                placeholderTextColor="#999"
+                multiline
+              />
+              
+              <View style={styles.detailDescriptionContainer}>
+                <MaterialIcons name="description" size={20} color="#ccc" style={styles.descriptionIcon} />
+                <TextInput
+                  style={styles.detailDescriptionInput}
+                  placeholder="描述"
+                  placeholderTextColor="#ccc"
+                  editable={false}
+                  multiline
+                />
+              </View>
+              
+              <View style={styles.subtasksSection}>
+                {selectedTodo?.subtasks && selectedTodo.subtasks.length > 0 && (
+                  <DraggableFlatList
+                    data={selectedTodo.subtasks}
+                    onDragEnd={({ data }) => updateSubtaskOrder(data)}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item, drag, isActive }) => (
+                      <ScaleDecorator>
+                        <View style={[styles.subtaskItem, isActive && styles.subtaskItemActive]}>
+                          <TouchableOpacity 
+                            onPress={() => toggleSubtask(item.id)}
+                            style={styles.subtaskCheckbox}
+                          >
+                            <MaterialIcons 
+                              name={item.completed ? "check-box" : "check-box-outline-blank"} 
+                              size={24} 
+                              color={item.completed ? "#34C759" : "#ccc"} 
+                            />
+                          </TouchableOpacity>
+                          
+                          {editingSubtaskId === item.id ? (
+                            <TextInput
+                              style={[styles.subtaskTextInput, item.completed && styles.subtaskTextCompleted]}
+                              value={editingSubtaskText}
+                              onChangeText={setEditingSubtaskText}
+                              onBlur={finishEditingSubtask}
+                              autoFocus
+                              multiline
+                            />
+                          ) : (
+                            <TouchableOpacity 
+                              style={styles.subtaskTextContainer}
+                              onPress={() => startEditingSubtask(item)}
+                              activeOpacity={0.7}
+                            >
+                              <Text style={[styles.subtaskText, item.completed && styles.subtaskTextCompleted]}>
+                                {item.title}
+                              </Text>
+                            </TouchableOpacity>
+                          )}
+                          
+                          {editingSubtaskId === item.id ? (
+                            <TouchableOpacity onPress={() => deleteSubtask(item.id)} style={styles.subtaskAction}>
+                              <MaterialIcons name="delete-outline" size={20} color="#FF3B30" />
+                            </TouchableOpacity>
+                          ) : (
+                            <TouchableOpacity 
+                              onLongPress={drag}
+                              disabled={isActive}
+                              style={styles.subtaskAction}
+                            >
+                              <MaterialIcons name="drag-indicator" size={20} color="#ccc" />
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                      </ScaleDecorator>
+                    )}
+                    scrollEnabled={false}
+                  />
+                )}
+                
+                <View style={styles.addSubtaskContainer}>
+                  <TouchableOpacity style={styles.subtaskCheckbox}>
+                    <MaterialIcons name="check-box-outline-blank" size={24} color="#ccc" />
+                  </TouchableOpacity>
+                  <TextInput
+                    style={styles.addSubtaskInput}
+                    value={newSubtaskTitle}
+                    onChangeText={setNewSubtaskTitle}
+                    onSubmitEditing={addSubtask}
+                    placeholder="添加子列表"
+                    placeholderTextColor="#ccc"
+                    returnKeyType="done"
+                  />
+                </View>
+              </View>
+            </ScrollView>
+            
+            <View style={styles.detailActions}>
+              <TouchableOpacity style={styles.detailActionButton} onPress={deleteTodoFromDetail}>
+                <MaterialIcons name="delete-outline" size={26} color="#666" />
+                <Text style={styles.detailActionText}>删除</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.detailActionButton}>
+                <MaterialIcons name="edit" size={26} color="#666" />
+                <Text style={styles.detailActionText}>编辑</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.detailActionButton}>
+                <MaterialIcons name="timer" size={26} color="#666" />
+                <Text style={styles.detailActionText}>计时</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.detailActionButton} onPress={toggleTodoFromDetail}>
+                <MaterialIcons 
+                  name={selectedTodo?.completed ? "replay" : "check-circle"} 
+                  size={26} 
+                  color="#666" 
+                />
+                <Text style={styles.detailActionText}>完成</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
       </Modal>
 
       {/* 删除确认弹窗 */}
@@ -742,5 +1062,129 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
+  },
+  // 详情弹窗样式
+  detailModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    justifyContent: 'flex-end',
+  },
+  detailModal: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    maxHeight: '85%',
+    paddingBottom: 20,
+  },
+  detailModalHandle: {
+    width: 36,
+    height: 4,
+    backgroundColor: '#ddd',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  detailContent: {
+    paddingHorizontal: 20,
+    paddingTop: 10,
+  },
+  detailTitleInput: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#000',
+    paddingVertical: 8,
+    marginBottom: 8,
+  },
+  detailDescriptionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    marginBottom: 12,
+  },
+  descriptionIcon: {
+    marginRight: 8,
+  },
+  detailDescriptionInput: {
+    flex: 1,
+    fontSize: 15,
+    color: '#ccc',
+  },
+  subtasksSection: {
+    marginTop: 8,
+  },
+  subtaskItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    backgroundColor: '#fff',
+  },
+  subtaskItemActive: {
+    backgroundColor: '#f8f8f8',
+  },
+  subtaskCheckbox: {
+    marginRight: 8,
+    padding: 4,
+  },
+  subtaskTextContainer: {
+    flex: 1,
+    paddingVertical: 4,
+  },
+  subtaskText: {
+    fontSize: 16,
+    color: '#000',
+  },
+  subtaskTextInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#000',
+    paddingVertical: 4,
+  },
+  subtaskTextCompleted: {
+    textDecorationLine: 'line-through',
+    color: '#aaa',
+  },
+  subtaskAction: {
+    padding: 4,
+    marginLeft: 8,
+  },
+  addSubtaskContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+    marginTop: 4,
+  },
+  addSubtaskInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#000',
+    marginLeft: 8,
+  },
+  detailActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+    backgroundColor: '#fff',
+    marginTop: 12,
+  },
+  detailActionButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 60,
+  },
+  detailActionText: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
+  },
+  subtaskCount: {
+    fontSize: 12,
+    color: '#999',
+    marginTop: 2,
   },
 });
