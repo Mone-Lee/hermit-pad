@@ -80,22 +80,6 @@ export const DetailModal: React.FC<DetailModalProps> = ({
               multiline
             />
 
-            <View style={detailModalStyles.detailDescriptionContainer}>
-              <MaterialIcons
-                name="description"
-                size={20}
-                color="#ccc"
-                style={detailModalStyles.descriptionIcon}
-              />
-              <TextInput
-                style={detailModalStyles.detailDescriptionInput}
-                placeholder="描述"
-                placeholderTextColor="#ccc"
-                editable={false}
-                multiline
-              />
-            </View>
-
             <View style={detailModalStyles.subtasksSection}>
               {todo?.subtasks && todo.subtasks.length > 0 && (
                 <DraggableFlatList
@@ -117,7 +101,7 @@ export const DetailModal: React.FC<DetailModalProps> = ({
                           <MaterialIcons
                             name={item.completed ? 'check-box' : 'check-box-outline-blank'}
                             size={24}
-                            color={item.completed ? '#34C759' : '#ccc'}
+                            color={item.completed ? '#eee' : '#ccc'}
                           />
                         </TouchableOpacity>
 
@@ -155,7 +139,7 @@ export const DetailModal: React.FC<DetailModalProps> = ({
                             onPress={() => onDeleteSubtask(item.id)}
                             style={detailModalStyles.subtaskAction}
                           >
-                            <MaterialIcons name="delete-outline" size={20} color="#FF3B30" />
+                            <MaterialIcons name="delete-outline" size={20} color="#f0726b" />
                           </TouchableOpacity>
                         ) : (
                           <TouchableOpacity
@@ -192,22 +176,14 @@ export const DetailModal: React.FC<DetailModalProps> = ({
 
           <View style={detailModalStyles.detailActions}>
             <TouchableOpacity style={detailModalStyles.detailActionButton} onPress={onDelete}>
-              <MaterialIcons name="delete-outline" size={26} color="#666" />
+              <MaterialIcons name="delete-outline" size={26} color="#f0726b" />
               <Text style={detailModalStyles.detailActionText}>删除</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={detailModalStyles.detailActionButton}>
-              <MaterialIcons name="edit" size={26} color="#666" />
-              <Text style={detailModalStyles.detailActionText}>编辑</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={detailModalStyles.detailActionButton}>
-              <MaterialIcons name="timer" size={26} color="#666" />
-              <Text style={detailModalStyles.detailActionText}>计时</Text>
             </TouchableOpacity>
             <TouchableOpacity style={detailModalStyles.detailActionButton} onPress={onToggleComplete}>
               <MaterialIcons
-                name={todo?.completed ? 'replay' : 'check-circle'}
+                name={todo?.completed ? 'remove-done' : 'done-all'}
                 size={26}
-                color="#666"
+                color={todo?.completed ? '#999' : '#4CAF50'}
               />
               <Text style={detailModalStyles.detailActionText}>完成</Text>
             </TouchableOpacity>

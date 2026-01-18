@@ -29,7 +29,7 @@ export const listScreenStyles = StyleSheet.create({
     fontSize: 16,
     color: '#ccc',
   },
-  giftButton: {
+  settingButton: {
     position: 'absolute',
     right: 20,
     bottom: 30,
@@ -40,9 +40,6 @@ export const listScreenStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 4,
-  },
-  giftIcon: {
-    fontSize: 28,
   },
 });
 
@@ -145,7 +142,7 @@ export const modalStyles = StyleSheet.create({
   },
   settingsItemCancelText: {
     fontSize: 16,
-    color: '#FF3B30',
+    color: '#f0726b',
     textAlign: 'center',
     width: '100%',
   },
@@ -324,20 +321,6 @@ export const detailModalStyles = StyleSheet.create({
     color: '#000',
     paddingVertical: 8,
     marginBottom: 8,
-  },
-  detailDescriptionContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    marginBottom: 12,
-  },
-  descriptionIcon: {
-    marginRight: 8,
-  },
-  detailDescriptionInput: {
-    flex: 1,
-    fontSize: 15,
-    color: '#ccc',
   },
   subtasksSection: {
     marginTop: 8,

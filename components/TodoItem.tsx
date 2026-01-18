@@ -2,7 +2,7 @@ import React from 'react';
 import { View, TouchableOpacity, Text, Platform, Animated } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Swipeable } from 'react-native-gesture-handler';
-import { ScaleDecorator, RenderItemParams } from 'react-native-draggable-flatlist';
+import { ScaleDecorator } from 'react-native-draggable-flatlist';
 import { Todo } from '../types';
 import { todoItemStyles } from '../styles/listScreen.styles';
 
@@ -37,7 +37,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
       <View style={todoItemStyles.swipeActionContainer}>
         <Animated.View style={[todoItemStyles.deleteAction, { transform: [{ scale }] }]}>
           <TouchableOpacity onPress={() => onDelete(item.id)}>
-            <MaterialIcons name="delete-outline" size={24} color="#FF3B30" />
+            <MaterialIcons name="delete-outline" size={24} color="#f0726b" />
           </TouchableOpacity>
         </Animated.View>
       </View>
@@ -59,9 +59,9 @@ export const TodoItem: React.FC<TodoItemProps> = ({
         <Animated.View style={[todoItemStyles.completeAction, { transform: [{ scale }] }]}>
           <TouchableOpacity onPress={() => onToggle(item.id)}>
             <MaterialIcons
-              name={item.completed ? 'replay' : 'check'}
+              name={item.completed ? 'remove-done' : 'done-all'}
               size={24}
-              color="#34C759"
+              color={item.completed ? '#999' : '#4CAF50'}
             />
           </TouchableOpacity>
         </Animated.View>

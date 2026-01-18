@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { MaterialIcons } from '@expo/vector-icons';
 import DraggableFlatList from 'react-native-draggable-flatlist';
 import * as Clipboard from 'expo-clipboard';
 import { Todo } from '../types';
@@ -268,10 +269,10 @@ export default function ListScreen() {
       )}
 
       <TouchableOpacity
-        style={listScreenStyles.giftButton}
+        style={listScreenStyles.settingButton}
         onPress={() => setShowSettings(true)}
       >
-        <Text style={listScreenStyles.giftIcon}>🎁</Text>
+        <MaterialIcons name="settings" size={24} color="black" />
       </TouchableOpacity>
 
       <SettingsModal

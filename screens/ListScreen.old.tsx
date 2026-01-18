@@ -668,7 +668,7 @@ export default function ListScreen() {
                           
                           {editingSubtaskId === item.id ? (
                             <TouchableOpacity onPress={() => deleteSubtask(item.id)} style={styles.subtaskAction}>
-                              <MaterialIcons name="delete-outline" size={20} color="#FF3B30" />
+                              <MaterialIcons name="delete-outline" size={20} color="#f0726b" />
                             </TouchableOpacity>
                           ) : (
                             <TouchableOpacity 
@@ -731,7 +731,7 @@ export default function ListScreen() {
         <View style={styles.deleteModalOverlay}>
           <View style={styles.deleteModal}>
             <View style={styles.deleteIconContainer}>
-              <MaterialIcons name="delete-outline" size={40} color="#FF3B30" />
+              <MaterialIcons name="delete-outline" size={40} color="#f0726b" />
             </View>
             <Text style={styles.deleteModalTitle}>确认删除事件</Text>
             <View style={styles.deleteModalActions}>

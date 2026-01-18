@@ -19,7 +19,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
       <View style={deleteModalStyles.deleteModalOverlay}>
         <View style={deleteModalStyles.deleteModal}>
           <View style={deleteModalStyles.deleteIconContainer}>
-            <MaterialIcons name="delete-outline" size={40} color="#FF3B30" />
+            <MaterialIcons name="delete-outline" size={40} color="#f0726b" />
           </View>
           <Text style={deleteModalStyles.deleteModalTitle}>确认删除事件</Text>
           <View style={deleteModalStyles.deleteModalActions}>

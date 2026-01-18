@@ -5,9 +5,8 @@ import {
   TouchableOpacity,
   Text,
   TextInput,
-  Platform,
 } from 'react-native';
-import * as Clipboard from 'expo-clipboard';
+import { MaterialIcons } from '@expo/vector-icons';
 import { modalStyles, importModalStyles } from '../styles/listScreen.styles';
 
 interface SettingsModalProps {
@@ -34,12 +33,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           <Text style={modalStyles.settingsTitle}>设置</Text>
 
           <TouchableOpacity style={modalStyles.settingsItem} onPress={onExport}>
-            <Text style={modalStyles.settingsItemIcon}>📤</Text>
+            <MaterialIcons name="file-upload" size={24} color="black" />
             <Text style={modalStyles.settingsItemText}>导出数据</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={modalStyles.settingsItem} onPress={onImport}>
-            <Text style={modalStyles.settingsItemIcon}>📥</Text>
+            <MaterialIcons name="file-download" size={24} color="black" />
             <Text style={modalStyles.settingsItemText}>导入数据</Text>
           </TouchableOpacity>
 
