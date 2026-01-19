@@ -17,7 +17,8 @@ import { useTodos } from '../hooks/useTodos';
 import { TodoItem } from '../components/TodoItem';
 import { DeleteConfirmModal } from '../components/DeleteConfirmModal';
 import { DetailModal } from '../components/DetailModal';
-import { SettingsModal, ImportModal } from '../components/SettingsModal';
+import { SettingsModal } from '../components/SettingsModal';
+import { ImportModal } from '../components/ImportModal';
 import { listScreenStyles } from '../styles/listScreen.styles';
 
 export default function ListScreen() {
