@@ -181,7 +181,7 @@ export const importModalStyles = StyleSheet.create({
     borderColor: '#ddd',
     borderRadius: 8,
     padding: 12,
-    minHeight: 150,
+    height: 150,
     fontSize: 14,
     textAlignVertical: 'top',
     backgroundColor: '#f9f9f9',

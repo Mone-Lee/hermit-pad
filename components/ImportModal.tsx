@@ -41,6 +41,8 @@ export const ImportModal: React.FC<ImportModalProps> = ({
             placeholder="粘贴JSON数据..."
             placeholderTextColor="#999"
             multiline
+            keyboardType="default"
+            textAlignVertical="top"
           />
 
           <View style={importModalStyles.importButtons}>
