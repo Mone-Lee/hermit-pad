@@ -95,19 +95,24 @@ export default function ListScreen() {
   const handleUpdateTodoTitle = () => {
     if (selectedTodo && editingTitle.trim() !== '') {
       updateTodoTitle(selectedTodo.id, editingTitle);
-      const updatedTodo = todos.find((t) => t.id === selectedTodo.id);
-      if (updatedTodo) {
-        setSelectedTodo(updatedTodo);
-      }
+      setSelectedTodo({ ...selectedTodo, title: editingTitle.trim() });
     }
   };
 
   const handleAddSubtask = () => {
-    if (selectedTodo && addSubtask(selectedTodo.id, newSubtaskTitle)) {
-      const updatedTodo = todos.find((t) => t.id === selectedTodo.id);
-      if (updatedTodo) {
-        setSelectedTodo(updatedTodo);
-      }
+    if (selectedTodo && newSubtaskTitle.trim() !== '') {
+      const newSubtask: Todo = {
+        id: `${selectedTodo.id}-${Date.now()}`,
+        title: newSubtaskTitle.trim(),
+        completed: false,
+        subtasks: [],
+      };
+      
+      addSubtask(selectedTodo.id, newSubtaskTitle);
+      setSelectedTodo({
+        ...selectedTodo,
+        subtasks: [...(selectedTodo.subtasks || []), newSubtask],
+      });
       setNewSubtaskTitle('');
     }
   };
@@ -115,20 +120,22 @@ export default function ListScreen() {
   const handleToggleSubtask = (subtaskId: string) => {
     if (selectedTodo) {
       toggleSubtask(selectedTodo.id, subtaskId);
-      const updatedTodo = todos.find((t) => t.id === selectedTodo.id);
-      if (updatedTodo) {
-        setSelectedTodo(updatedTodo);
-      }
+      setSelectedTodo({
+        ...selectedTodo,
+        subtasks: (selectedTodo.subtasks || []).map((st) =>
+          st.id === subtaskId ? { ...st, completed: !st.completed } : st
+        ),
+      });
     }
   };
 
   const handleDeleteSubtask = (subtaskId: string) => {
     if (selectedTodo) {
       deleteSubtask(selectedTodo.id, subtaskId);
-      const updatedTodo = todos.find((t) => t.id === selectedTodo.id);
-      if (updatedTodo) {
-        setSelectedTodo(updatedTodo);
-      }
+      setSelectedTodo({
+        ...selectedTodo,
+        subtasks: (selectedTodo.subtasks || []).filter((st) => st.id !== subtaskId),
+      });
     }
   };
 
@@ -138,12 +145,14 @@ export default function ListScreen() {
   };
 
   const finishEditingSubtask = () => {
-    if (selectedTodo && editingSubtaskId) {
+    if (selectedTodo && editingSubtaskId && editingSubtaskText.trim() !== '') {
       updateSubtaskTitle(selectedTodo.id, editingSubtaskId, editingSubtaskText);
-      const updatedTodo = todos.find((t) => t.id === selectedTodo.id);
-      if (updatedTodo) {
-        setSelectedTodo(updatedTodo);
-      }
+      setSelectedTodo({
+        ...selectedTodo,
+        subtasks: (selectedTodo.subtasks || []).map((st) =>
+          st.id === editingSubtaskId ? { ...st, title: editingSubtaskText.trim() } : st
+        ),
+      });
     }
     setEditingSubtaskId(null);
     setEditingSubtaskText('');
@@ -152,17 +161,30 @@ export default function ListScreen() {
   const handleUpdateSubtaskOrder = (newSubtasks: Todo[]) => {
     if (selectedTodo) {
       updateSubtaskOrder(selectedTodo.id, newSubtasks);
-      const updatedTodo = todos.find((t) => t.id === selectedTodo.id);
-      if (updatedTodo) {
-        setSelectedTodo(updatedTodo);
-      }
+      setSelectedTodo({
+        ...selectedTodo,
+        subtasks: newSubtasks,
+      });
     }
   };
 
   const toggleTodoFromDetail = () => {
     if (selectedTodo) {
+      const newCompletedState = !selectedTodo.completed;
+      
+      // 更新本地状态
+      const updatedSubtasks = selectedTodo.subtasks?.map(subtask => ({
+        ...subtask,
+        completed: newCompletedState
+      }));
+      
+      setSelectedTodo({ 
+        ...selectedTodo, 
+        completed: newCompletedState,
+        subtasks: updatedSubtasks 
+      });
+
       toggleTodo(selectedTodo.id);
-      setSelectedTodo({ ...selectedTodo, completed: !selectedTodo.completed });
     }
   };
 

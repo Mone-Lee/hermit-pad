@@ -39,9 +39,17 @@ export const useTodos = () => {
   };
 
   const toggleTodo = (id: string) => {
+    const newTodo = todos.find((todo) => todo.id === id);
+    if (!newTodo) return;
+    const newStatus = !newTodo.completed;
+    newTodo.completed = newStatus;
+    newTodo.subtasks?.forEach((subtask) => {
+      subtask.completed = newStatus;
+    });
+
     setTodos(
       todos.map((todo) =>
-        todo.id === id ? { ...todo, completed: !todo.completed } : todo
+        todo.id === id ? { ...todo, completed: newTodo.completed, subtasks: newTodo.subtasks } : todo
       )
     );
   };
@@ -142,6 +150,20 @@ export const useTodos = () => {
     setTodos(newTodos);
   };
 
+  const toggleAllSubtasks = (todoId: string, completed: boolean) => {
+    setTodos(
+      todos.map((todo) => {
+        if (todo.id === todoId) {
+          return {
+            ...todo,
+            subtasks: (todo.subtasks || []).map((st) => ({ ...st, completed })),
+          };
+        }
+        return todo;
+      })
+    );
+  };
+
   return {
     todos,
     isLoading,
@@ -156,5 +178,6 @@ export const useTodos = () => {
     updateSubtaskTitle,
     updateSubtaskOrder,
     importTodos,
+    toggleAllSubtasks,
   };
 };
