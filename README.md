@@ -33,6 +33,15 @@
 - npm 或 yarn
 - Expo Go 应用（在手机上安装，用于测试）
 
+#### iOS（仅 macOS）
+
+- Xcode（含 Command Line Tools）
+- CocoaPods（用于 `expo run:ios` / `pod install`）
+  - 安装：`gem install cocoapods`
+  - 若提示 `pod: command not found`，把 RubyGems 的可执行目录加到 PATH：
+    - 临时：`export PATH="$(ruby -e 'print Gem.bindir'):$PATH"`
+    - 永久：把上面这一行加入你的 `~/.zprofile` / `~/.bash_profile`
+
 ### 安装依赖
 
 ```bash
